@@ -22,7 +22,7 @@ So, by default, only Kiwi + Hachi are embedded.
 
 Build-time source order:
 
-1. optional submodule/clone source (`source-submodule` + `GOOGLE_FONTS_REPO_DIR` or `third_party/google-fonts`)
+1. optional local clone source (`source-submodule` + `GOOGLE_FONTS_REPO_DIR` or build-time clone cache)
 2. local fallback files in this crate (`source-local-fallback`)
 3. GitHub API + raw download (`source-google-fonts`)
 
@@ -32,7 +32,7 @@ This means existing local font files are reused first, and network fetch is only
 
 - `license-ofl`: enable OFL families
 - `source-google-fonts`: enable GitHub API + raw download path
-- `source-submodule`: enable local `google/fonts` repository path
+- `source-submodule`: enable local `google/fonts` repository source (`GOOGLE_FONTS_REPO_DIR` or auto clone cache)
 - `source-local-fallback`: enable `fonts/` + `licenses/` fallback path
 - `font-kiwi-maru`: enable Kiwi Maru family
 - `font-hachi-maru-pop`: enable Hachi Maru Pop family
@@ -46,29 +46,22 @@ Default features:
 - `font-kiwi-maru`
 - `font-hachi-maru-pop`
 
-## Submodule path (optional)
+## Local clone source (optional)
 
-Submodule is optional and used only when `source-submodule` is enabled.
+`source-submodule` is a feature name kept for compatibility.
+Current behavior is local clone source, not repository submodule requirement.
 
-```bash
-git submodule add https://github.com/google/fonts third_party/google-fonts
-git submodule update --init --recursive
-cargo check --no-default-features --features license-ofl,source-submodule,font-all
-```
+With `source-submodule` enabled, `build.rs` tries a local clone cache under:
+
+- `target/egui-ofl-fonts-cache/google-fonts` (gitignored via `target/`)
+
+and clones `https://github.com/google/fonts` automatically when missing.
 
 You can also point to another local clone:
 
 ```bash
 GOOGLE_FONTS_REPO_DIR=/path/to/google-fonts cargo check --no-default-features --features license-ofl,source-submodule,font-all
 ```
-
-When `source-submodule` is enabled, `build.rs` also tries:
-
-```bash
-git submodule update --init --recursive -- third_party/google-fonts
-```
-
-if `third_party/google-fonts` is missing and `.gitmodules` exists.
 
 ## Using as a git dependency
 
@@ -99,10 +92,9 @@ Example:
 EGUI_OFL_EXTRA_OFL_DIRS="rocknrollone,zenmarugothic" cargo check
 ```
 
-When using submodule source only:
+When using clone source only:
 
 ```bash
-git -C third_party/google-fonts sparse-checkout add ofl/rocknrollone ofl/zenmarugothic
 cargo check --no-default-features --features license-ofl,source-submodule,font-all
 ```
 
@@ -116,7 +108,7 @@ If build fails with `403` while using `source-google-fonts`:
 GITHUB_TOKEN=your_token_here cargo check
 ```
 
-2. Or switch to submodule source:
+2. Or switch to clone source:
 
 ```bash
 cargo check --no-default-features --features license-ofl,source-submodule,font-all

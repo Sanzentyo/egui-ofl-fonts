@@ -32,7 +32,8 @@ Effect:
 For each required asset (`.ttf/.otf` and `OFL.txt`):
 
 1. If `source-submodule` is enabled:
-   - check `GOOGLE_FONTS_REPO_DIR` (or `third_party/google-fonts`) first
+   - check `GOOGLE_FONTS_REPO_DIR` first
+   - otherwise auto-clone `https://github.com/google/fonts` into `target/egui-ofl-fonts-cache/google-fonts`
 2. If `source-local-fallback` is enabled:
    - check crate-local `fonts/` and `licenses/`
 3. If `source-google-fonts` is enabled:
@@ -93,7 +94,7 @@ cargo clean
 cargo check -vv
 ```
 
-### Submodule-only mode
+### Clone-source-only mode (`source-submodule` feature)
 
 ```bash
 cargo clean
@@ -123,7 +124,7 @@ If build fails with `403` while using `source-google-fonts`:
 GITHUB_TOKEN=your_token_here cargo check
 ```
 
-- Or switch to submodule source:
+- Or switch to clone source:
 
 ```bash
 cargo check --no-default-features --features license-ofl,source-submodule,font-all

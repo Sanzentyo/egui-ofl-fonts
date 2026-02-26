@@ -5,6 +5,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+const GOOGLE_FONTS_REPO_URL: &str = "https://github.com/google/fonts";
+
 #[path = "src/font_manifest.rs"]
 mod font_manifest;
 
@@ -62,7 +64,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=src/font_manifest.rs");
     println!("cargo:rerun-if-changed=fonts");
     println!("cargo:rerun-if-changed=licenses");
-    println!("cargo:rerun-if-changed=.gitmodules");
     println!("cargo:rerun-if-env-changed=GOOGLE_FONTS_REPO_DIR");
     println!("cargo:rerun-if-env-changed=EGUI_OFL_EXTRA_OFL_DIRS");
     println!("cargo:rerun-if-env-changed=GITHUB_TOKEN");
@@ -85,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     if use_submodule && repo_dir.is_none() && !use_google_api && !use_local_fallback {
-        return Err("`source-submodule` is enabled, but `third_party/google-fonts` was not found and auto-init failed; set GOOGLE_FONTS_REPO_DIR or enable another source feature".into());
+        return Err("`source-submodule` is enabled, but google/fonts clone cache is unavailable; set GOOGLE_FONTS_REPO_DIR or enable another source feature".into());
     }
 
     let has_any_explicit_family_feature = font_manifest::FONT_FAMILIES
@@ -216,57 +217,58 @@ fn resolve_google_fonts_repo_dir(crate_root: &Path) -> Result<Option<PathBuf>, B
         return Ok(Some(PathBuf::from(path)));
     }
 
-    let default_repo = crate_root.join("third_party/google-fonts");
-    if !default_repo.exists() {
-        try_init_google_fonts_submodule(crate_root)?;
-    }
-
-    if default_repo.exists() {
-        Ok(Some(default_repo))
-    } else {
-        Ok(None)
-    }
+    ensure_google_fonts_repo_cached(crate_root)
 }
 
-fn try_init_google_fonts_submodule(crate_root: &Path) -> Result<(), Box<dyn Error>> {
-    let gitmodules = crate_root.join(".gitmodules");
-    if !gitmodules.exists() {
-        return Ok(());
+fn ensure_google_fonts_repo_cached(crate_root: &Path) -> Result<Option<PathBuf>, Box<dyn Error>> {
+    let cache_repo = crate_root
+        .join("target")
+        .join("egui-ofl-fonts-cache")
+        .join("google-fonts");
+
+    if cache_repo.join("ofl").exists() {
+        return Ok(Some(cache_repo));
+    }
+
+    if cache_repo.exists() {
+        let _ = fs::remove_dir_all(&cache_repo);
+    }
+
+    if let Some(parent) = cache_repo.parent() {
+        fs::create_dir_all(parent)?;
     }
 
     let output = Command::new("git")
-        .arg("-C")
-        .arg(crate_root)
-        .arg("submodule")
-        .arg("update")
-        .arg("--init")
-        .arg("--recursive")
-        .arg("--")
-        .arg("third_party/google-fonts")
+        .arg("clone")
+        .arg("--depth")
+        .arg("1")
+        .arg(GOOGLE_FONTS_REPO_URL)
+        .arg(&cache_repo)
         .output();
 
     match output {
         Ok(output) if output.status.success() => {
             println!(
-                "cargo:warning=egui-ofl-fonts: initialized submodule third_party/google-fonts (source-submodule)"
+                "cargo:warning=egui-ofl-fonts: cloned google/fonts into target cache (source-submodule)"
             );
+            Ok(Some(cache_repo))
         }
         Ok(output) => {
             let stderr = String::from_utf8_lossy(&output.stderr);
             println!(
-                "cargo:warning=egui-ofl-fonts: could not init submodule third_party/google-fonts: {}",
+                "cargo:warning=egui-ofl-fonts: could not clone google/fonts cache: {}",
                 stderr.trim()
             );
+            Ok(None)
         }
         Err(err) => {
             println!(
-                "cargo:warning=egui-ofl-fonts: could not run git to init submodule third_party/google-fonts: {}",
+                "cargo:warning=egui-ofl-fonts: could not run git clone for google/fonts cache: {}",
                 err
             );
+            Ok(None)
         }
     }
-
-    Ok(())
 }
 
 fn build_family_from_manifest(family: &FontFamilySpec) -> BuildFamilySpec {
