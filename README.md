@@ -1,5 +1,7 @@
 # egui-ofl-fonts
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Sanzentyo/egui-ofl-fonts)
+
 Small helper crate for loading OFL fonts into `egui`.
 
 ## Default behavior
