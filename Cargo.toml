@@ -3,11 +3,35 @@ name = "egui-ofl-fonts"
 version = "0.1.0"
 edition = "2024"
 authors = ["Sanzentyo"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 description = "Small helper crate to load bundled OFL fonts into egui"
 readme = "README.md"
 keywords = ["egui", "fonts", "ofl"]
 categories = ["gui"]
+build = "build.rs"
+
+[features]
+default = [
+	"license-ofl",
+	"source-google-fonts",
+	"source-local-fallback",
+	"font-kiwi-maru",
+	"font-hachi-maru-pop",
+]
+license-ofl = []
+source-google-fonts = []
+source-submodule = []
+source-local-fallback = []
+font-all = []
+font-kiwi-maru = []
+font-hachi-maru-pop = []
 
 [dependencies]
-egui = "0.33.3"
+egui = "0.33"
+
+[build-dependencies]
+ureq = "3"
+serde_json = "1"
+
+[dev-dependencies]
+eframe = "0.33.3"
