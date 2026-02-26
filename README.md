@@ -62,6 +62,31 @@ You can also point to another local clone:
 GOOGLE_FONTS_REPO_DIR=/path/to/google-fonts cargo check --no-default-features --features license-ofl,source-submodule,font-all
 ```
 
+When `source-submodule` is enabled, `build.rs` also tries:
+
+```bash
+git submodule update --init --recursive -- third_party/google-fonts
+```
+
+if `third_party/google-fonts` is missing and `.gitmodules` exists.
+
+## Using as a git dependency
+
+`[package].repository` in `Cargo.toml` is metadata only.
+Actual dependency source is controlled by the dependent project's `[dependencies]` entry.
+
+Example:
+
+```toml
+[dependencies]
+egui-ofl-fonts = { git = "https://github.com/<owner>/<repo>", default-features = false, features = ["license-ofl", "source-submodule", "font-all"] }
+```
+
+Recommended options for consumers:
+
+- submodule-first (with fallback): `license-ofl,source-submodule,source-local-fallback,font-all`
+- network-first (no submodule needed): `license-ofl,source-google-fonts,font-all`
+
 ## Extra families beyond Kiwi/Hachi
 
 You can include other OFL families from `google/fonts/ofl/*` by setting:
