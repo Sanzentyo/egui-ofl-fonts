@@ -171,11 +171,3 @@ for family in egui_ofl_fonts::embedded_family_info() {
     println!("{} -> {}", family.display_name, family.repo_url);
 }
 ```
-
-## License
-
-- SPDX: `MIT OR Apache-2.0`
-- Rust source code in this crate: MIT OR Apache-2.0 (see `LICENSE-MIT` and `LICENSE-APACHE`)
-- Bundled font files: SIL Open Font License 1.1
-  - Hachi Maru Pop: `licenses/OFL-Hachi_Maru_Pop.txt`
-  - Kiwi Maru: `licenses/OFL-Kiwi_Maru.txt`
