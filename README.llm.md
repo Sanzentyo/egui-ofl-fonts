@@ -152,9 +152,3 @@ Use this to confirm which source path was actually used.
 - `cargo run --example font_picker_gui`
 
 `font_picker_gui` shows embedded font list, lets you pick a font, and shows acquisition summary.
-
-## 9) License note
-
-- Rust source code: `MIT OR Apache-2.0`
-- Files: `LICENSE`, `LICENSE-APACHE`
-- Bundled font files: `SIL Open Font License 1.1`
